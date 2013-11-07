@@ -420,7 +420,31 @@ public class RefreshableListView extends ListView {
 
 		return needs;
 	}
+	
 	public void showHeaderPullView(boolean animated) {
+		if (mListHeaderView != null) {
+			if (animated) {
+				smoothScrollToPosition(0);
+			}
+			else {
+				setSelection(0); 
+			}
+			mListHeaderView.moveToUpdateHeight(animated);
+		}
+	}
+	
+	public void closeHeaderPullView(boolean animated) {
+		if (mListHeaderView != null) {
+			if (animated) {
+				smoothScrollToPosition(0);
+			}
+			else {
+				setSelection(0); 
+			}
+			mListHeaderView.close(STATE_NORMAL, animated);
+		}
+
+	}
 
 	/** When use custom List header view */
 	public static interface OnHeaderViewChangedListener {
