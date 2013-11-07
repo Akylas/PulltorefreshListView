@@ -118,10 +118,14 @@ public class ListHeaderView extends ViewGroup {
 
 	private Runnable mUpdateRunnable;
 
-	public int close(int nextState) {
-		mUpdatingStatus = UPDATING_FINISH;
-		if (mOnHeaderViewChangedListener != null) {
-			mOnHeaderViewChangedListener.onViewUpdateFinish(this);
+	public int close(int nextState, boolean animated) {
+		if (mUpdatingStatus == UPDATING_ON_GOING) {
+			mUpdatingStatus = UPDATING_FINISH;
+		}
+		if (mCanUpdate) {
+			if (mOnHeaderViewChangedListener != null) {
+				mOnHeaderViewChangedListener.onViewUpdateFinish(this);
+			}
 		}
 		mDistance = mInitHeight = mHeight;
 		int duration = (int) (mDistance * 4);
