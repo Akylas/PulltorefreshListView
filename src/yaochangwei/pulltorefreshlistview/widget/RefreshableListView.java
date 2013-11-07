@@ -148,8 +148,8 @@ public class RefreshableListView extends ListView {
 		if (mState == STATE_UPDATING) {
 			return;
 		}
-		setSelectionFromTop(0, 0);
-		mListHeaderView.moveToUpdateHeight();
+		smoothScrollToPosition(0);
+		mListHeaderView.moveToUpdateHeight(true);
 		update();
 	}
 
@@ -201,7 +201,7 @@ public class RefreshableListView extends ListView {
 
 					post(new Runnable() {
 						public void run() {
-							int deltay = mListBottomView.close(STATE_NORMAL);
+							int deltay = mListBottomView.close(STATE_NORMAL, true);
 							postDelayed(new Runnable() {
 								public void run() {
 
@@ -223,15 +223,13 @@ public class RefreshableListView extends ListView {
 			});
 			mState = STATE_UPDATING;
 		} else {
-			mListBottomView.close(STATE_NORMAL);
+			mListBottomView.close(STATE_NORMAL, true);
 		}
 	}
 
 	private void update() {
-		if (mListHeaderView.isUpdateNeeded()) {
-			if (mOnUpdateTask != null) {
-				mOnUpdateTask.onUpdateStart();
-			}
+		if (mOnUpdateTask != null && mListHeaderView.isUpdateNeeded()) {
+			mOnUpdateTask.onUpdateStart();
 			mListHeaderView.startUpdate(new Runnable() {
 				public void run() {
 					final long b = System.currentTimeMillis();
@@ -249,7 +247,7 @@ public class RefreshableListView extends ListView {
 					}
 					post(new Runnable() {
 						public void run() {
-							mListHeaderView.close(STATE_NORMAL);
+							mListHeaderView.close(STATE_NORMAL, true);
 							if (mOnUpdateTask != null) {
 								mOnUpdateTask.updateUI();
 							}
@@ -259,13 +257,13 @@ public class RefreshableListView extends ListView {
 			});
 			mState = STATE_UPDATING;
 		} else {
-			mListHeaderView.close(STATE_NORMAL);
+			mListHeaderView.close(STATE_NORMAL, true);
 		}
 	}
 
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
-		if (mState == STATE_UPDATING) {
+		if ((mListHeaderView == null && mListBottomView == null) || mState == STATE_UPDATING) {
 			return super.dispatchTouchEvent(ev);
 		}
 		final int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
@@ -286,7 +284,7 @@ public class RefreshableListView extends ListView {
 				isLastViewBottom();
 			}
 
-			if (mState == STATE_READY) {
+			if (mState == STATE_READY && mListHeaderView != null) {
 				final int activePointerId = mActivePointerId;
 				final int activePointerIndex = MotionEventCompat
 						.findPointerIndex(ev, activePointerId);
@@ -300,7 +298,7 @@ public class RefreshableListView extends ListView {
 					ev.setAction(MotionEvent.ACTION_CANCEL);
 					super.dispatchTouchEvent(ev);
 				}
-			} else if (mState == UP_STATE_READY) {
+			} else if (mState == UP_STATE_READY && mListBottomView != null) {
 				final int activePointerId = mActivePointerId;
 				final int activePointerIndex = MotionEventCompat
 						.findPointerIndex(ev, activePointerId);
