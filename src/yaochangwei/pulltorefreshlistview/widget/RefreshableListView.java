@@ -41,6 +41,11 @@ public class RefreshableListView extends ListView {
 
 	private int mTouchSlop;
 
+	public RefreshableListView(Context context) {
+		super(context);
+		initialize();
+	}
+	
 	public RefreshableListView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		initialize();
