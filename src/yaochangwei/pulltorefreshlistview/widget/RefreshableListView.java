@@ -420,6 +420,7 @@ public class RefreshableListView extends ListView {
 
 		return needs;
 	}
+	public void showHeaderPullView(boolean animated) {
 
 	/** When use custom List header view */
 	public static interface OnHeaderViewChangedListener {
