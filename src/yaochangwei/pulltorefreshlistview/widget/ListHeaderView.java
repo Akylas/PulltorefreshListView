@@ -40,6 +40,8 @@ public class ListHeaderView extends ViewGroup {
 
 	/** The state shoudl be when close execute */
 	private int mNextState = INVALID_STATE;
+	
+	CloseTimer timer;
 
 	OnHeaderViewChangedListener mOnHeaderViewChangedListener;
 
@@ -99,6 +101,16 @@ public class ListHeaderView extends ViewGroup {
 			mUpdateHeight = childView.getMeasuredHeight();
 		}
 	}
+	
+	private void startAnimation(int duration) {
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
+		}
+		duration = duration > MAX_DURATION ? MAX_DURATION : duration;
+		timer = new CloseTimer(duration);
+		timer.startTimer();
+	}
 
 	public void startUpdate(Runnable runnable) {
 		mUpdatingStatus = UPDATING_READY;
@@ -108,12 +120,8 @@ public class ListHeaderView extends ViewGroup {
 		if (mDistance < 0) {
 			mDistance = mInitHeight;
 		}
-		// getChildView().setVisibility(View.INVISIBLE);
-		int duration = (int) (mDistance * 3);
-		duration = duration > MAX_DURATION ? MAX_DURATION : duration;
-		Log.d(VIEW_LOG_TAG, "duration:" + duration);
-		final CloseTimer timer = new CloseTimer(duration);
-		timer.startTimer();
+		
+		startAnimation((int) (mDistance * 3));
 	}
 
 	private Runnable mUpdateRunnable;
@@ -128,12 +136,21 @@ public class ListHeaderView extends ViewGroup {
 			}
 		}
 		mDistance = mInitHeight = mHeight;
-		int duration = (int) (mDistance * 4);
-		duration = duration > MAX_DURATION ? MAX_DURATION : duration;
-		mNextState = nextState;
-		final CloseTimer timer = new CloseTimer(duration);
-		timer.startTimer();
-		return duration;
+		
+		if (animated) {
+			int duration = (int) Math.abs(mDistance * 4);
+			duration = duration > MAX_DURATION ? MAX_DURATION : duration;
+			startAnimation(duration);
+			return duration;
+		}
+		else {
+			if (nextState != INVALID_STATE) {
+				mListView.setState(nextState);
+				mNextState = INVALID_STATE;
+			}
+			setHeaderHeight(0);
+			return 0;
+		}	
 	}
 
 	public boolean isUpdateNeeded() {
@@ -147,9 +164,62 @@ public class ListHeaderView extends ViewGroup {
 		return needUpdate;
 	}
 
-	public void moveToUpdateHeight() {
-		setHeaderHeight(mUpdateHeight);
-		mImediateUpdate = true;
+	public void moveToUpdateHeight(boolean animated) {
+		if (animated) {
+			mInitHeight = mHeight;
+			mDistance = mInitHeight - mUpdateHeight;
+			if (mDistance < 0) {
+				mDistance = mInitHeight;
+			}
+			
+			startAnimation((int) (mDistance * 3));
+		}
+		else {
+			setHeaderHeight(mUpdateHeight);
+		}
+	}
+	
+	private class OpenTimer extends CountDownTimer {
+
+		private long mStart;
+		private float mDurationReciprocal;
+
+		private static final int COUNT_DOWN_INTERVAL = 15;
+
+		public OpenTimer(long millisInFuture) {
+			super(millisInFuture, COUNT_DOWN_INTERVAL);
+			mDurationReciprocal = 1.0f / millisInFuture;
+		}
+
+		public void startTimer() {
+			mStart = AnimationUtils.currentAnimationTimeMillis();
+			start();
+		}
+
+		@Override
+		public void onFinish() {
+			float x = 1.0f;
+			if (mNextState != INVALID_STATE) {
+				mListView.setState(mNextState);
+				mNextState = INVALID_STATE;
+			}
+			setHeaderHeight((int) (mInitHeight - mDistance * x));
+			if (mUpdateRunnable != null) {
+				final Runnable runnable = mUpdateRunnable;
+				new Thread(runnable).start();
+				mUpdateRunnable = null;
+			}
+		}
+
+		@Override
+		public void onTick(long millisUntilFinished) {
+			final int interval = (int) (AnimationUtils
+					.currentAnimationTimeMillis() - mStart);
+			float x = interval * mDurationReciprocal;
+			x = sInterpolator.getInterpolation(x);
+			setHeaderHeight((int) (mInitHeight - mDistance * x));
+		}
+
 	}
 
 	private class CloseTimer extends CountDownTimer {
@@ -239,6 +309,9 @@ public class ListHeaderView extends ViewGroup {
 				mOnHeaderViewChangedListener.onViewUpdating(this);
 				mUpdatingStatus = UPDATING_ON_GOING;
 			}
+			if(height>=updateHeight) {
+                mUpdatingStatus=UPDATING_IDLE;
+            }
 		} else {
 			if ((height < updateHeight) && mCanUpdate) {
 				if (mOnHeaderViewChangedListener != null) {
