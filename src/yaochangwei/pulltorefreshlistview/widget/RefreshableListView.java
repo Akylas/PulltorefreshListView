@@ -170,9 +170,6 @@ public class RefreshableListView extends ListView {
 
 	private void initialize() {
 		final Context context = getContext();
-		mListHeaderView = new ListHeaderView(context, this);
-		addHeaderView(mListHeaderView, null, false);
-		mListBottomView = new ListBottomView(getContext(), this);
 		mState = STATE_NORMAL;
 		final ViewConfiguration configuration = ViewConfiguration.get(context);
 		mTouchSlop = configuration.getScaledTouchSlop();
