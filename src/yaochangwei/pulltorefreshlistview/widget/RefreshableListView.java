@@ -38,6 +38,7 @@ public class RefreshableListView extends ListView {
 
 	private OnUpdateTask mOnUpdateTask;
 	private OnPullUpUpdateTask mOnPullUpUpdateTask;
+	private OnPullListener mOnPullListener;
 
 	private int mTouchSlop;
 
@@ -134,6 +135,10 @@ public class RefreshableListView extends ListView {
 
 	public void setOnPullUpUpdateTask(OnPullUpUpdateTask task) {
 		mOnPullUpUpdateTask = task;
+	}
+	
+	public void setOnPullListener(OnPullListener listener) {
+		mOnPullListener = listener;
 	}
 
 	/**
@@ -324,6 +329,9 @@ public class RefreshableListView extends ListView {
 
 				final int headerHeight = mListHeaderView.getHeight();
 				setHeaderHeight(headerHeight + deltaY * 5 / 9);
+				if (mOnPullListener != null) {
+					mOnPullListener.onPull(mListHeaderView.canUpdate());
+				}
 				return true;
 			} else if (mState == UP_STATE_PULL) {
 				final int activePointerId = mActivePointerId;
@@ -342,7 +350,11 @@ public class RefreshableListView extends ListView {
 		case MotionEvent.ACTION_UP:
 			mActivePointerId = INVALID_POINTER_ID;
 			if (mState == STATE_PULL) {
+				if (mOnPullListener != null) {
+					mOnPullListener.onPullEnd(mListHeaderView.canUpdate());
+				}
 				update();
+				
 			} else if (mState == UP_STATE_PULL) {
 				pullUpUpdate();
 			}
@@ -449,6 +461,12 @@ public class RefreshableListView extends ListView {
 	public static interface OnBottomViewChangedListener extends
 			OnHeaderViewChangedListener {
 
+	}
+	
+	public static interface OnPullListener {
+		void onPull(boolean canUpdate);
+
+		void onPullEnd(boolean canUpdate);
 	}
 
 	public static interface OnPullUpUpdateTask extends OnUpdateTask {

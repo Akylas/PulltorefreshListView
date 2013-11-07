@@ -202,6 +202,10 @@ public class ListHeaderView extends ViewGroup {
 	}
 
 	private boolean mCanUpdate;
+	
+	public boolean canUpdate(){
+		return mCanUpdate;
+	}
 
 	public void setHeaderHeight(int height) {
 		if (mHeight == height && height == 0) {
