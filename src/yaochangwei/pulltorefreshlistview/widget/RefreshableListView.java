@@ -88,6 +88,36 @@ public class RefreshableListView extends ListView {
 	public void setContentView(View v) {
 		mListHeaderView.addView(v);
 	}
+	
+	public void setHeaderPullView(View v) {
+		if (v == null) {
+			if (mListHeaderView != null) {
+				removeHeaderView(mListHeaderView);
+				mListHeaderView = null;
+			}
+			return;
+		}
+		if (mListHeaderView == null) {
+			mListHeaderView = new ListHeaderView(getContext(), this);
+			addHeaderView(mListHeaderView, null, false);
+		}
+		setContentView(v);
+	}
+	
+	public void setBottomPullView(View v) {
+		if (v == null) {
+			if (mListBottomView != null) {
+				removeFooterView(mListBottomView);
+				mListBottomView = null;
+			}
+			return;
+		}
+		if (mListBottomView == null) {
+			mListBottomView = new ListBottomView(getContext(), this);
+			addFooterView(mListBottomView, null, false);
+		}
+		setBottomContentView(v);
+	}
 
 	public ListHeaderView getListHeaderView() {
 		return mListHeaderView;
