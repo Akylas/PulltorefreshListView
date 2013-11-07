@@ -55,6 +55,8 @@ public class ListHeaderView extends ViewGroup {
 	private int mMaxPullHeight;
 
 	private static final int MAX_PULL_HEIGHT_DP = 200;
+	
+	private boolean needsMaxHeightCompute = false;
 
 	public ListHeaderView(Context context, RefreshableListView list) {
 		super(context);
@@ -73,8 +75,14 @@ public class ListHeaderView extends ViewGroup {
 		final int childViewWidth = childView.getMeasuredWidth();
 		final int childViewHeight = childView.getMeasuredHeight();
 		final int measuredHeight = getMeasuredHeight();
-		childView.layout(0, measuredHeight - childViewHeight, childViewWidth,
+		final int measuredWidth = getMeasuredWidth();
+		childView.layout(0, measuredHeight - childViewHeight, measuredWidth,
 				measuredHeight);
+		if (needsMaxHeightCompute) {
+			needsMaxHeightCompute = false;
+			mMaxPullHeight = childView.getMeasuredHeight() + (int)(getContext().getResources().getDisplayMetrics().density
+					* MAX_PULL_HEIGHT_DP * 0.2f + 0.5f);
+		}
 	}
 
 	@Override
@@ -198,6 +206,7 @@ public class ListHeaderView extends ViewGroup {
 			throw new IllegalStateException(
 					"ListHeaderView can only have one child view");
 		}
+		needsMaxHeightCompute = true;
 		super.addView(child);
 	}
 
